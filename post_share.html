@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+ <div id="content" class="container main">
+
+
+    <div class="form-m">
+        <form action="" target="iframeNews" method="post" id="submit_form">
+            <div class="item ui-clr">
+                <dl>
+                    <dt class="color03">[[shaidanshangpin]]：</dt>
+                    <dd style="line-height: 2rem;">
+                        <a href="{$goods.url}" target="_blank">
+                            <img src="{zz mod=fileurl source=$goods.thumb width=64 type=0}" width="64" style="float:left;margin-right:10px;" />
+                            {$goods.title}
+                        </a>
+                    </dd>
+                </dl>
+            </div>
+            <div class="item ui-clr">
+                <dl>
+                    <dt class="color03">[[shaidanbiaoti]]：</dt>
+                    <dd>
+                        <input type="text" class="input-m" name="title" value="{$row.title}" />
+                    </dd>
+                </dl>
+            </div>
+            <div class="item ui-clr">
+                <dl>
+                    <dt class="color03">[[shaidanneirong]]：</dt>
+                    <dd>
+                        <textarea name="content" class="input-m" style="height:80px;">{$row.content}</textarea>
+                    </dd>
+                </dl>
+            </div>
+            <div class="item ui-clr">
+                <dl>
+                    <dt class="color03">[[shangchuantupian]]：</dt>
+                    <dd style="line-height: 2;">
+                    <span class="file_span">[[shangchuantupian]]<input type="file" id="file" name="files[]" multiple="multiple"/></span>
+                    </dd>
+                </dl>
+            </div>
+            <div class="item ui-clr">
+                 <div id="shareupload_success"></div>
+                 <div id="result" name="result"></div>
+            </div>
+            <input type="hidden" name="Submit" value="1">
+            <input type="submit" value="[[tijiaoshaidan]]" class="btn" />
+        </form>
+    </div>
+</div>
+   
+</body>
+</html>
+
+
+<script type="text/javascript">
+var result=document.getElementById("result");
+var file=document.getElementById("file");
+var number_num=-1;
+
+function readAsDataURL(obj,i){
+    var reader = new FileReader();
+    //将文件以Data URL形式读入页面
+    reader.readAsDataURL(obj);
+    reader.onload=function(e){
+        var result=document.getElementById("result");
+        //显示文件
+        var str='<div id="uploadList_'+ i +'" data-index="'+ i +'"><img src="' + this.result +'" alt="" /><span class="upload_delete"  data-index="'+ i +'" onclick="funDeleteFile('+i+')"></span></div>'
+        $('#result').append(str)
+ 
+    }
+}
+
+function funDeleteFile (num) {
+    $('#file').val('');  
+    $('#uploadList_'+num).hide().remove();
+    $('input[input_num="'+num+'"]').remove();
+
+};
+
+// 判断个数是否超出
+function number (obj){
+
+      var fs=obj.length+$('input[name="share[]"]').length; 
+
+        if(fs >6 ){
+            alert("[[Upload the file number more than 6! Please select again]]");  
+            $('#file').val('');  
+            return false;  
+        }else{
+            
+            return true;
+        }
+
+};
+
+function creatform(obj,num){
+
+    var oOutput = document.getElementById("shareupload_success");
+    var oMyForm = new FormData();
+    oMyForm.append("upFile", obj);
+    oMyForm.append("name", 'share');
+    oMyForm.append("Filename", obj.name);
+
+    var oReq = new XMLHttpRequest();
+    oReq.open("POST", "/home/upload");
+    oReq.onload = function(oEvent) {
+    if (oReq.status == 200) {
+
+      $('#shareupload_success').append('<input type="hidden" input_num="'+num+'" name="share[]" value="'+oReq.responseText+'">')
+      readAsDataURL(obj,num);
+    } else {
+        alert("Error " + oReq.status + " occurred uploading your file.")
+      //oOutput.innerHTML = "Error " + oReq.status + " occurred uploading your file.<br \/>";
+    }
+  };
+    oReq.send(oMyForm);
+
+}
+function fileSelect(e) {
+    e = e || window.event;
+     
+    var files = e.target.files;  
+
+     if(!number(files)){
+        return false;
+     };
+     
+    for(var i = 0, f; f = files[i]; i++) {
+        if(f.size>1024*1024){
+            alert('"'+f.name + "[[This file is larger than 1M! Please select again!]]");
+            $('#file').val('')
+            break;
+        }
+         //检验是否为图像文件
+        if(!/image\/\w+/.test(f.type)){
+            alert("[[Can only upload pictures]]");
+            break;
+        }
+         number_num+=1;
+         //readAsDataURL(files[i],number_num);
+         creatform(f,number_num);
+    }
+
+}
+ 
+if(window.File && window.FileList && window.FileReader && window.Blob) {
+    document.getElementById('file').addEventListener('change', fileSelect, false);
+} else {
+   $('#content').html('<p class="error_tips">[[Your browser does not support the image upload feature, please replace the browser!]]</p>');
+}
+
+
+</script>
